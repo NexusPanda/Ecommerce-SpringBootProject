@@ -3,7 +3,6 @@ package com.ecommerce.Ecommerce.controller;
 import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.service.CategoryService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

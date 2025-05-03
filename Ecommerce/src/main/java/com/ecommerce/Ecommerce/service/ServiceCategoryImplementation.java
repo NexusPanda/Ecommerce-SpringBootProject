@@ -1,5 +1,6 @@
 package com.ecommerce.Ecommerce.service;
 
+import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
 import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.Repository.JPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class ServiceCategoryImplementation implements CategoryService{
     @Override
     public String deleteCategory(Long categoryID){
         Category deleteCategory = jpaRepostry.findById(categoryID)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category Not Found !!!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category","CategoryId",categoryID));
         jpaRepostry.delete(deleteCategory);
         return "Category Id " + categoryID + " successfully removed !!!";
     }
@@ -36,7 +37,7 @@ public class ServiceCategoryImplementation implements CategoryService{
     @Override
     public String updateCategory(Category category, Long categoryID){
         Category updateCategory = jpaRepostry.findById(categoryID)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category Not Found !!!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category","CategoryId",categoryID));
         category.setCategoryID(categoryID);
         jpaRepostry.save(category);
         return "Category Id " + categoryID + " is Updated !!!";

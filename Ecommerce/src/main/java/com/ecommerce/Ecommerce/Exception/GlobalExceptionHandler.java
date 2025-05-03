@@ -1,7 +1,6 @@
 package com.ecommerce.Ecommerce.Exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,5 +23,11 @@ public class GlobalExceptionHandler {
             exception.put(getName,msg);
         });
         return new ResponseEntity<Map<String, String>>(exception, HttpStatus.BAD_GATEWAY);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> ResourceNotFoundExceptionMethod(ResourceNotFoundException e){
+        String message = e.getMessage();
+        return new ResponseEntity<>(message,HttpStatus.NOT_FOUND);
     }
 }

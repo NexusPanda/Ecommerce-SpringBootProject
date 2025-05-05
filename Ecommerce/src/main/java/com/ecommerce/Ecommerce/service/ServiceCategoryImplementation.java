@@ -1,15 +1,13 @@
 package com.ecommerce.Ecommerce.service;
 
+import com.ecommerce.Ecommerce.Exception.APIException;
 import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
 import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.Repository.JPARepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ServiceCategoryImplementation implements CategoryService{
@@ -18,11 +16,16 @@ public class ServiceCategoryImplementation implements CategoryService{
 
     @Override
     public List<Category> displayCategory() {
+        if(jpaRepostry.findAll().isEmpty())
+            throw new APIException("No Categories Found !!!");
         return jpaRepostry.findAll();
     }
 
     @Override
     public void addCategory(Category category) {
+        Category savedCategory = jpaRepostry.findByCategoryName(category.getCategoryName());
+        if(savedCategory != null)
+            throw new APIException("Category Name " + category.getCategoryName() + " already exist !!!");
         jpaRepostry.save(category);
     }
 

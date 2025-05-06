@@ -3,7 +3,10 @@ package com.ecommerce.Ecommerce.service;
 import com.ecommerce.Ecommerce.Exception.APIException;
 import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
 import com.ecommerce.Ecommerce.Model.Category;
+import com.ecommerce.Ecommerce.Payload.CategoryDTO;
+import com.ecommerce.Ecommerce.Payload.CategoryResponse;
 import com.ecommerce.Ecommerce.Repository.JPARepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,35 +17,46 @@ public class ServiceCategoryImplementation implements CategoryService{
     @Autowired
     private JPARepository jpaRepostry;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @Override
-    public List<Category> displayCategory() {
-        if(jpaRepostry.findAll().isEmpty())
+    public CategoryResponse displayCategory() {
+        List<Category> categoryList = jpaRepostry.findAll();
+        if(categoryList.isEmpty())
             throw new APIException("No Categories Found !!!");
-        return jpaRepostry.findAll();
+        List<CategoryDTO>  categoryDTOList = categoryList.stream()
+                .map(category -> modelMapper.map(category, CategoryDTO.class)).toList();
+        CategoryResponse categoryResponse1 = new CategoryResponse();
+        categoryResponse1.setCategoryDTOList(categoryDTOList);
+        return categoryResponse1;
     }
 
     @Override
-    public void addCategory(Category category) {
-        Category savedCategory = jpaRepostry.findByCategoryName(category.getCategoryName());
-        if(savedCategory != null)
-            throw new APIException("Category Name " + category.getCategoryName() + " already exist !!!");
-        jpaRepostry.save(category);
+    public CategoryDTO addCategory(CategoryDTO categoryDTO) {
+        Category categoryByDB = jpaRepostry.findByCategoryName(categoryDTO.getCategoryName());
+        if(categoryByDB != null)
+            throw new APIException("Category Name " + categoryDTO.getCategoryName() + " already exist !!!");
+        Category savedCategory = modelMapper.map(categoryDTO, Category.class);
+        jpaRepostry.save(savedCategory);
+        return modelMapper.map(savedCategory, CategoryDTO.class);
     }
 
     @Override
-    public String deleteCategory(Long categoryID){
+    public CategoryDTO deleteCategory(Long categoryID){
         Category deleteCategory = jpaRepostry.findById(categoryID)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","CategoryId",categoryID));
         jpaRepostry.delete(deleteCategory);
-        return "Category Id " + categoryID + " successfully removed !!!";
+        return modelMapper.map(deleteCategory, CategoryDTO.class);
     }
 
     @Override
-    public String updateCategory(Category category, Long categoryID){
-        Category updateCategory = jpaRepostry.findById(categoryID)
+    public CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryID){
+        Category updateCategoryDB = jpaRepostry.findById(categoryID)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","CategoryId",categoryID));
-        category.setCategoryID(categoryID);
-        jpaRepostry.save(category);
-        return "Category Id " + categoryID + " is Updated !!!";
+        Category savedCategory = modelMapper.map(categoryDTO, Category.class);
+        savedCategory.setCategoryID(categoryID);
+        updateCategoryDB = jpaRepostry.save(savedCategory);
+        return modelMapper.map(updateCategoryDB, CategoryDTO.class);
     }
 }

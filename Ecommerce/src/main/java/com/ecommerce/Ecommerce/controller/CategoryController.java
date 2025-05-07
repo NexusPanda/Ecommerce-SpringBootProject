@@ -1,7 +1,5 @@
 package com.ecommerce.Ecommerce.controller;
 
-import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
-import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.Payload.CategoryDTO;
 import com.ecommerce.Ecommerce.Payload.CategoryResponse;
 import com.ecommerce.Ecommerce.service.CategoryService;
@@ -10,9 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -20,10 +15,12 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+
     @GetMapping("/admin/categories")
     //@RequestMapping(value = "/admin/categories" , method = RequestMethod.GET)
-    public ResponseEntity<CategoryResponse> displayCategory(){
-        CategoryResponse categoryResponse = categoryService.displayCategory();
+    public ResponseEntity<CategoryResponse> displayCategory(@RequestParam(name = "pageNumber") int pageNumber,
+                                                            @RequestParam(name = "pageSize") int pageSize){
+        CategoryResponse categoryResponse = categoryService.displayCategory(pageNumber, pageSize);
         return new ResponseEntity<>(categoryResponse, HttpStatus.OK);
     }
 

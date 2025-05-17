@@ -5,7 +5,7 @@ import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
 import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.Payload.CategoryDTO;
 import com.ecommerce.Ecommerce.Payload.CategoryResponse;
-import com.ecommerce.Ecommerce.Repository.JPARepository;
+import com.ecommerce.Ecommerce.Repository.CategoryJPARepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 public class ServiceCategoryImplementation implements CategoryService{
     @Autowired
-    private JPARepository jpaRepostry;
+    private CategoryJPARepository jpaRepostry;
 
     @Autowired
     private ModelMapper modelMapper;

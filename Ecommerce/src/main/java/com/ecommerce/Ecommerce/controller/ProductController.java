@@ -28,4 +28,29 @@ public class ProductController {
         ProductResponse productResponse = productService.displayProduct();
         return new ResponseEntity<>(productResponse, HttpStatus.OK);
     }
+
+    @GetMapping("/public/categories/{categoryId}/product")
+    public ResponseEntity<ProductResponse> displayProductByCategoryID(@PathVariable Long categoryId){
+        ProductResponse productResponse = productService.displayProductByCategoryID(categoryId);
+        return new ResponseEntity<>(productResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("public/product/keywords/{keyword}")
+    public ResponseEntity<ProductResponse> displayProductByKeyword(@PathVariable String keyword){
+        ProductResponse productResponse = productService.displayProductByKeyword('%' + keyword + '%');
+        return new ResponseEntity<>(productResponse, HttpStatus.OK);
+    }
+
+    @PutMapping("admin/products/{productId}")
+    public ResponseEntity<ProductDTO> updateProduct(@RequestBody Product product,
+                                                    @PathVariable Long productId){
+        ProductDTO productDTO = productService.updateProduct(product, productId);
+        return new ResponseEntity<>(productDTO, HttpStatus.OK);
+    }
+
+    @DeleteMapping("admin/products/{productId}")
+    public ResponseEntity<ProductDTO> deleteProduct(@PathVariable Long productId){
+        ProductDTO productDTO = productService.deleteProduct(productId);
+        return new ResponseEntity<>(productDTO, HttpStatus.OK);
+    }
 }

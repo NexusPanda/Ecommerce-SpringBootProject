@@ -8,4 +8,11 @@ public interface ProductService {
 
     ProductDTO saveProduct(Long categoryId, Product product);
     ProductResponse displayProduct();
+    ProductResponse displayProductByCategoryID(Long categoryId);
+
+    ProductResponse displayProductByKeyword(String keyword);
+
+    ProductDTO updateProduct(Product product, Long productId);
+
+    ProductDTO deleteProduct(Long productId);
 }

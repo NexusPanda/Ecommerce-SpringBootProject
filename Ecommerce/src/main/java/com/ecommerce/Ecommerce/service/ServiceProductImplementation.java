@@ -1,5 +1,6 @@
 package com.ecommerce.Ecommerce.service;
 
+import com.ecommerce.Ecommerce.Exception.APIException;
 import com.ecommerce.Ecommerce.Exception.ResourceNotFoundException;
 import com.ecommerce.Ecommerce.Model.Category;
 import com.ecommerce.Ecommerce.Model.Product;
@@ -9,15 +10,16 @@ import com.ecommerce.Ecommerce.Repository.CategoryJPARepository;
 import com.ecommerce.Ecommerce.Repository.ProductJPARepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ServiceProductImplementation implements ProductService {
@@ -29,6 +31,12 @@ public class ServiceProductImplementation implements ProductService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private FileService fileService;
+
+    @Value("{project.image}")
+    private String path;
 
     public ProductDTO saveProduct(Long categoryId, ProductDTO productDTO){
         Category category = categoryJPARepository.findById(categoryId)
@@ -42,40 +50,73 @@ public class ServiceProductImplementation implements ProductService {
         return modelMapper.map(saveProduct, ProductDTO.class);
     }
 
-    public ProductResponse displayProduct(){
-        List<Product> productList = productJPARepository.findAll();
+    public ProductResponse displayProduct(int pageNumber, int pageSize, String sortBy, String sortDir){
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Product> pageablePage = productJPARepository.findAll(pageable);
+
+        List<Product> productList = pageablePage.getContent();
+        if(productList.isEmpty()){
+            throw new APIException("Products Not Found");
+        }
         List<ProductDTO> productDTOS = productList.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
 
         ProductResponse productResponse = new ProductResponse();
         productResponse.setProductDTOS(productDTOS);
+        productResponse.setPageNumber(pageablePage.getNumber());
+        productResponse.setPageSize(pageablePage.getSize());
+        productResponse.setTotalPages(pageablePage.getTotalPages());
+        productResponse.setLastPage(pageablePage.isLast());
         return productResponse;
     }
 
-    public ProductResponse displayProductByCategoryID(Long categoryId){
+    public ProductResponse displayProductByCategoryID(Long categoryId, int pageNumber, int pageSize, String sortBy, String sortDir){
         Category category = categoryJPARepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","categoryId",categoryId));
 
-        List<Product> productList = productJPARepository.findByCategoryOrderByProductPriceAsc(category);
-        List<ProductDTO> productDTOS = productList.stream()
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Product> pageablePage = productJPARepository.findByCategoryOrderByProductPriceAsc(pageable, category);
+
+       List<ProductDTO> productDTOS = pageablePage.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
 
         ProductResponse productResponse = new ProductResponse();
         productResponse.setProductDTOS(productDTOS);
+        productResponse.setPageNumber(pageablePage.getNumber());
+        productResponse.setPageSize(pageablePage.getSize());
+        productResponse.setTotalPages(pageablePage.getTotalPages());
+        productResponse.setLastPage(pageablePage.isLast());
         return productResponse;
     }
 
-    public ProductResponse displayProductByKeyword(String keyword){
+    public ProductResponse displayProductByKeyword(String keyword, int pageNumber, int pageSize, String sortBy, String sortDir){
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
-        List<Product> productList = productJPARepository.findByProductNameLikeIgnoreCase(keyword);
-        List<ProductDTO> productDTOS = productList.stream()
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Product> pageablePage = productJPARepository.findByProductNameLikeIgnoreCase(pageable, keyword);
+
+       if(pageablePage.isEmpty()){
+            throw new APIException("Keyword Not Found");
+        }
+        List<ProductDTO> productDTOS = pageablePage.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
 
         ProductResponse productResponse = new ProductResponse();
         productResponse.setProductDTOS(productDTOS);
+        productResponse.setPageNumber(pageablePage.getNumber());
+        productResponse.setPageSize(pageablePage.getSize());
+        productResponse.setTotalPages(pageablePage.getTotalPages());
+        productResponse.setLastPage(pageablePage.isLast());
         return productResponse;
     }
 
@@ -104,24 +145,10 @@ public class ServiceProductImplementation implements ProductService {
         Product product1 = productJPARepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        String path = "images/";
-        String fileName = uploadImage(path, image);
+        String fileName = fileService.uploadImage(path, image);
         product1.setProductImage(fileName);
         Product product = productJPARepository.save(product1);
         return modelMapper.map(product, ProductDTO.class);
-    }
-
-    private String uploadImage(String path, MultipartFile file) throws IOException {
-        String OriginalName = file.getOriginalFilename();
-        String randomId = UUID.randomUUID().toString();
-        String fileName = randomId.concat(OriginalName.substring(OriginalName.lastIndexOf('.')));
-        String filePath = path + File.separator + fileName;
-        File folder = new File(path);
-        if(!folder.exists()){
-            folder.mkdir();
-        }
-        Files.copy(file.getInputStream(), Paths.get(filePath));
-        return fileName;
     }
 
 }

@@ -42,20 +42,21 @@ public class SecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/signin").permitAll()
+                .requestMatchers("/signin", "/check").permitAll()
                 .anyRequest().authenticated());
+
         http.sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 //        http.formLogin(withDefaults());
 //        http.httpBasic(withDefaults());
         http.exceptionHandling(
-                ExceptionRequest ->
-                        ExceptionRequest.authenticationEntryPoint(authEntryPointJwt)
+                exception ->
+                        exception.authenticationEntryPoint(authEntryPointJwt)
         );
 
         http.headers(headers ->
-                headers.frameOptions(frameOptions ->
-                        frameOptions.sameOrigin()));
+                headers.frameOptions(frame -> frame.sameOrigin()));
+
         http.csrf(csrf -> csrf.disable());
 
         http.addFilterBefore(authenticationJwtTokenFilter(),
@@ -64,14 +65,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(DataSource dataSource){
+    public UserDetailsService userDetailsService(){
         return new JdbcUserDetailsManager(dataSource);
     }
 
+//    @Bean
+//    public CommandLineRunner initData(UserDetailsService userDetailsService){
+//        return args -> {
+//            JdbcUserDetailsManager manager = (JdbcUserDetailsManager) userDetailsService;
+//            UserDetails admin = User.withUsername("admin")
+//                    .password(passwordEncoder().encode("pass"))
+//                    .roles("ADMIN")
+//                    .build();
+//
+//            UserDetails user1 = User.withUsername("user1")
+//                    .password(passwordEncoder().encode("pass1"))
+//                    .roles("USER")
+//                    .build();
+//
+//            JdbcUserDetailsManager jdbcUserDetailsManager =
+//                    new JdbcUserDetailsManager(dataSource);
+//            jdbcUserDetailsManager.createUser(user1);
+//            jdbcUserDetailsManager.createUser(admin);
+//        };
+//    }
+
     @Bean
-    public CommandLineRunner inidata(UserDetailsService userDetailsService) {
+    public CommandLineRunner initData(UserDetailsService userDetailsService){
         return args -> {
             JdbcUserDetailsManager manager = (JdbcUserDetailsManager) userDetailsService;
+
             UserDetails admin = User.withUsername("admin")
                     .password(passwordEncoder().encode("pass"))
                     .roles("ADMIN")
@@ -82,9 +105,12 @@ public class SecurityConfig {
                     .roles("USER")
                     .build();
 
-            JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
-            userDetailsManager.createUser(user1);
-            userDetailsManager.createUser(admin);
+            if (!manager.userExists("admin")) {
+                manager.createUser(admin);
+            }
+            if (!manager.userExists("user1")) {
+                manager.createUser(user1);
+            }
         };
     }
 

@@ -32,7 +32,7 @@ import java.util.Set;
 public class AuthController {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -113,7 +113,6 @@ public class AuthController {
                 }
             });
         }
-
         user.setRoles(roles);
         userRepository.save(user);
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));

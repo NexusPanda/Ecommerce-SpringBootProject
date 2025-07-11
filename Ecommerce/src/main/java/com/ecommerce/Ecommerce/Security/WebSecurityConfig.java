@@ -43,6 +43,7 @@ public class WebSecurityConfig {
         return authenticationProvider;
     }
 
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
@@ -51,6 +52,8 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+//                .headers(headers -> headers.frameOptions(frames ->
+//                        frames.sameOrigin()))
                 .exceptionHandling(exception ->
                                 exception.authenticationEntryPoint(authEntryPointJwt))
                 .sessionManagement(session ->
@@ -63,6 +66,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/images/**").permitAll()
+//                        .requestMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authTokenFilter(),
